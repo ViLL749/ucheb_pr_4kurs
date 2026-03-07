@@ -45,16 +45,17 @@ class AuthWindow(QWidget):
             cur = conn.cursor()
 
             # Ищем роль пользователя по логину и паролю
+            #
             cur.execute("""
-                SELECT Roles.RoleName FROM Users 
+                SELECT Roles.RoleName, Users.FIO FROM Users 
                 JOIN Roles ON Users.RoleID = Roles.RoleID 
                 WHERE Login=? AND Password=?""", (login, password))
             result = cur.fetchone()
-            conn.close()
 
-            # Если роль найдена, создаём окно
+            # Если роль найдена создаём окно
             if result:
-                self.main_win = ProductWindow(result[0])
+                # Передаем и роль, и ФИО
+                self.main_win = ProductWindow(role=result[0], user_name=result[1])
                 self.main_win.show()
                 self.close()
             else:
