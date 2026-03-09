@@ -80,3 +80,12 @@ CREATE TABLE Statuses (
     StatusName TEXT NOT NULL UNIQUE
 );
 
+CREATE TABLE ProductLogs (
+    LogID INTEGER PRIMARY KEY AUTOINCREMENT,
+    Action TEXT,
+    ProductArticle TEXT,
+    ProductName TEXT,
+    UserName TEXT,
+    Details TEXT,
+    ActionTime TEXT
+);
