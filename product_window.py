@@ -9,7 +9,7 @@ class ProductCard(QFrame):
     def __init__(self, product_data, role):
         super().__init__()
 
-        # Сохраняем  данные
+        # Сохраняем данные
         self.prod_id = product_data[0]
         self.prod_name_text = str(product_data[1])
         self.product_data = product_data
@@ -221,7 +221,7 @@ class ProductWindow(QWidget):
         self.found_cards = []
         self.current_match_index = -1
         self.setWindowTitle("Просмотр товаров")
-        self.resize(1000, 700)  # Немного увеличим окно для удобства
+        self.resize(1000, 700)
         self.setWindowIcon(QIcon("resources/icon.png"))
 
 
@@ -230,20 +230,21 @@ class ProductWindow(QWidget):
         main_layout.setContentsMargins(15, 15, 15, 15)
         main_layout.setSpacing(10)
 
-        # --- ОБНОВЛЕННАЯ ШАПКА (ФИО справа) ---
+        # Шапка
         header_layout = QHBoxLayout()
         header_layout.setContentsMargins(10, 5, 10, 5)
         header_layout.setSpacing(15)
 
         logo = QLabel()
-        pixmap = QPixmap("photo/logo.png")  # путь к твоему логотипу
+        pixmap = QPixmap("photo/logo.png")
         logo.setPixmap(pixmap.scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         header_layout.insertWidget(0, logo)
 
         # 1. Слева: Фильтрация
         self.filter_combo = QComboBox()
         self.filter_combo.setFixedWidth(200)
-        self.filter_combo.addItems(["Все производители", "ASUS", "Lenovo", "Apple", "HP", "Samsung"])
+        self.load_manufacturers()
+        self.filter_combo.currentIndexChanged.connect(self.load_products)
         self.filter_combo.currentTextChanged.connect(self.load_products)
         header_layout.addWidget(self.filter_combo)
 
@@ -251,11 +252,11 @@ class ProductWindow(QWidget):
         if self.role in ["Менеджер", "Администратор"]:
             self.search_input = QLineEdit()
             self.search_input.setPlaceholderText("Поиск по названию...")
-            self.search_input.setMinimumWidth(250)  # Чтобы поле не было коротким
+            self.search_input.setMinimumWidth(250)
             self.search_input.textChanged.connect(self.highlight_search)
             header_layout.addWidget(self.search_input, stretch=2)
 
-            # Кнопки навигации поиска рядом с полем
+            # Кнопки навигации
             nav_layout = QHBoxLayout()
             nav_layout.setSpacing(2)
             self.btn_prev = QPushButton("<")
@@ -268,11 +269,10 @@ class ProductWindow(QWidget):
             nav_layout.addWidget(self.btn_next)
             header_layout.addLayout(nav_layout)
 
-        # 3. ПРУЖИНА (Разделяет левую и правую части)
+        # 3. Пружина
         header_layout.addStretch(1)
 
         # 4. Справа: Информация о пользователе
-        # Выравниваем текст по правому краю
         user_info = QLabel(
             f"<div align='right'>Пользователь: <b>{self.user_name}</b><br>Роль: <i>{self.role}</i></div>")
         user_info.setStyleSheet("font-size: 12px; color: #333;")
@@ -355,7 +355,7 @@ class ProductWindow(QWidget):
 
         main_layout.addLayout(header_layout)
 
-        # --- СКРОЛЛ (без изменений по логике, только имя) ---
+        # Скролл
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setStyleSheet("QScrollArea { border: none; background-color: transparent; }")
@@ -382,7 +382,7 @@ class ProductWindow(QWidget):
             conn = get_db_connection()
             cur = conn.cursor()
 
-            manufacturer = self.filter_combo.currentText()
+            manufacturer_id = self.filter_combo.currentData()
 
             query = """
                 SELECT 
@@ -405,9 +405,9 @@ class ProductWindow(QWidget):
 
             params = []
 
-            if manufacturer != "Все производители":
-                query += " WHERE m.ManufacturerName = ?"
-                params.append(manufacturer)
+            if manufacturer_id is not None:
+                query += " WHERE p.ManufacturerID = ?"
+                params.append(manufacturer_id)
 
             cur.execute(query, params)
             products = cur.fetchall()
@@ -422,6 +422,20 @@ class ProductWindow(QWidget):
 
         except Exception as e:
             print(f"Ошибка загрузки: {e}")
+
+    def load_manufacturers(self):
+        self.filter_combo.clear()
+        self.filter_combo.addItem("Все производители", None)
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute("SELECT ManufacturerID, ManufacturerName FROM Manufacturers")
+
+        for m_id, name in cur.fetchall():
+            self.filter_combo.addItem(name, m_id)
+
+        conn.close()
 
     def add_product(self):
 

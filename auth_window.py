@@ -40,26 +40,27 @@ class AuthWindow(QWidget):
         login = self.login_input.text()
         password = self.pass_input.text()
 
+        # print("LOGIN:", repr(login))
+        # print("PASSWORD:", repr(password))
+
         try:
             conn = get_db_connection()
             cur = conn.cursor()
 
-            # Ищем роль пользователя по логину и паролю
-            #
             cur.execute("""
                 SELECT Roles.RoleName, Users.FIO FROM Users 
                 JOIN Roles ON Users.RoleID = Roles.RoleID 
                 WHERE Login=? AND Password=?""", (login, password))
+
             result = cur.fetchone()
 
-            # Если роль найдена создаём окно
             if result:
-                # Передаем и роль, и ФИО
                 self.main_win = ProductWindow(role=result[0], user_name=result[1])
                 self.main_win.show()
                 self.close()
             else:
                 QMessageBox.warning(self, "Ошибка", "Неверный логин или пароль")
+
         except Exception as e:
             QMessageBox.critical(self, "Ошибка БД", str(e))
 

@@ -195,7 +195,7 @@ class ProductForm(QDialog):
 
             details = ""
 
-            # ЕСЛИ РЕДАКТИРОВАНИЕ
+            # Если редактирование
             if self.old_data:
 
                 fields = [
@@ -238,7 +238,7 @@ class ProductForm(QDialog):
                     details
                 )
 
-            # ЕСЛИ ДОБАВЛЕНИЕ
+            # Если добавление
             else:
 
                 cur.execute("""
